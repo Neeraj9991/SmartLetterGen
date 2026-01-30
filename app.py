@@ -12,8 +12,8 @@ st.sidebar.title("Excel Rules")
 
 st.sidebar.markdown("""
 ### Mandatory Excel Columns
-- **1st Column:** ECode  
-- **2nd Column:** Name  
+- **1st Column:** ECode
+- **2nd Column:** Name
 
 ---
 
@@ -79,17 +79,17 @@ def format_value(key, value):
     value_str = str(value)
     key_lower = key.lower()
 
-    # Currency
-    if "_c" in key_lower:
+    # Comma formatting (check before _c since "_comma" contains "_c")
+    if "_comma" in key_lower:
         try:
-            value_str = f"₹{int(float(value)):,}"
+            value_str = f"{int(float(value)):,}"
         except:
             pass
 
-    # Comma formatting
-    elif "_comma" in key_lower:
+    # Currency
+    elif "_c" in key_lower:
         try:
-            value_str = f"{int(float(value)):,}"
+            value_str = f"₹{int(float(value)):,}"
         except:
             pass
 
@@ -129,6 +129,11 @@ def replace_placeholders(doc, data):
         if not matches:
             return
 
+        # Preserve original font size from the first run
+        original_font_size = None
+        if para.runs:
+            original_font_size = para.runs[0].font.size
+
         para.clear()
         last_idx = 0
 
@@ -137,7 +142,9 @@ def replace_placeholders(doc, data):
             start = full_text.find(placeholder, last_idx)
 
             if start > last_idx:
-                para.add_run(full_text[last_idx:start])
+                run = para.add_run(full_text[last_idx:start])
+                if original_font_size:
+                    run.font.size = original_font_size
 
             key = match.strip()
             if key in data:
@@ -149,11 +156,16 @@ def replace_placeholders(doc, data):
                 run.bold = style["bold"]
                 run.italic = style["italic"]
                 run.underline = style["underline"]
+                # Preserve original font size
+                if original_font_size:
+                    run.font.size = original_font_size
 
             last_idx = start + len(placeholder)
 
         if last_idx < len(full_text):
-            para.add_run(full_text[last_idx:])
+            run = para.add_run(full_text[last_idx:])
+            if original_font_size:
+                run.font.size = original_font_size
 
     # Paragraphs
     for para in doc.paragraphs:
