@@ -76,7 +76,12 @@ def format_value(key, value):
     if value is None:
         return ""
 
-    value_str = str(value)
+    # Remove decimal .0 for whole numbers parsed as floats by pandas
+    if type(value).__name__ in ['float', 'float32', 'float64'] and value == int(value):
+        value_str = str(int(value))
+    else:
+        value_str = str(value)
+
     key_lower = key.lower()
 
     # Comma formatting (check before _c since "_comma" contains "_c")
