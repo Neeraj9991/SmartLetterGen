@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 from docx import Document
@@ -5,7 +6,82 @@ from io import BytesIO
 import zipfile
 import re
 
-st.set_page_config(page_title="SmartLetterGen", layout="centered")
+st.set_page_config(page_title="SGV Group | Smart Letter Gen", page_icon="🔴", layout="centered")
+
+# ===================== CUSTOM CSS =====================
+st.markdown("""
+    <style>
+        .stApp {
+            background-color: #F9FAFB;
+        }
+        /* Custom Header Banner */
+        .custom-banner {
+            background-color: #264653;
+            padding: 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .logo-box {
+            background-color: white;
+            padding: 8px;
+            border-radius: 10px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }    
+        .banner-title {
+            margin: 0 !important;
+            font-size: 1.8rem !important;
+            font-weight: 700 !important;
+            color: white !important;
+        }
+        .banner-subtitle {
+            margin: 5px 0 0 0;
+            font-size: 0.95rem;
+            color: #E2E8F0;
+        }
+        /* Section Titles */
+        .section-title {
+            color: #64748B;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        /* Uploader Boxes */
+        div[data-testid="stFileUploader"] {
+            padding: 1.5rem;
+            border-radius: 10px;
+            background-color: #F1F5F9;
+            border: 2px dashed #CBD5E1;
+            transition: all 0.3s;
+        }
+        div[data-testid="stFileUploader"]:hover {
+            border-color: #94A3B8;
+            background-color: #E2E8F0;
+        }
+        /* Button */
+        .stButton>button {
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .stButton>button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(49, 130, 206, 0.2);
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # ===================== SIDEBAR =====================
 st.sidebar.title("Excel Rules")
@@ -61,15 +137,41 @@ st.sidebar.download_button(
     label="⬇️ Download Sample Excel",
     data=sample_buffer,
     file_name="SmartLetterGen_Sample.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    type="primary"
 )
 
 # ===================== MAIN =====================
-st.title("SmartLetterGen")
-st.caption("Generate personalized DOCX letters with smart formatting")
+import os
+import base64
 
-template_file = st.file_uploader("📤 Upload DOCX Template", type=["docx"])
-excel_file = st.file_uploader("📤 Upload Excel File", type=["xlsx"])
+# Helper to load logo as base64
+logo_b64 = ""
+if os.path.exists("logo.png"):
+    with open("logo.png", "rb") as f:
+        logo_b64 = base64.b64encode(f.read()).decode()
+
+logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-width: 100%; max-height: 100%;">' if logo_b64 else '<div style="color: #B91C1C; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1px;">SGV</div>'
+
+st.markdown(f"""
+    <div class="custom-banner">
+        <div class="logo-box">
+            {logo_html}
+        </div>
+        <div>
+            <h1 class="banner-title">Smart Letter Gen</h1>
+            <p class="banner-subtitle">Upload your DOCX template and Excel data — personalized letters will be generated automatically.</p>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+st.markdown('<p class="section-title">📁 UPLOAD FILES</p>', unsafe_allow_html=True)
+
+col_t, col_e = st.columns(2)
+with col_t:
+    template_file = st.file_uploader("DOCX Template", type=["docx"])
+with col_e:
+    excel_file = st.file_uploader("Excel Data (.xlsx)", type=["xlsx"])
 
 # ===================== FORMATTERS =====================
 def format_value(key, value):
@@ -205,7 +307,7 @@ if template_file and excel_file:
     st.subheader("📊 Detected Excel Headers")
     st.write(list(df.columns))
 
-    if st.button("🚀 Generate Letters (ZIP)"):
+    if st.button("🚀 Generate Letters (ZIP)", type="primary"):
         zip_buffer = BytesIO()
 
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
@@ -232,5 +334,9 @@ if template_file and excel_file:
             label="⬇️ Download Letters (ZIP)",
             data=zip_buffer,
             file_name="SmartLetterGen_Output.zip",
-            mime="application/zip"
+            mime="application/zip",
+            type="primary"
         )
+else:
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.info("👆 Upload both your DOCX template and Excel data to get started.")
