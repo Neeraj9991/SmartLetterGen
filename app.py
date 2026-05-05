@@ -6,7 +6,7 @@ from io import BytesIO
 import zipfile
 import re
 
-st.set_page_config(page_title="SGV Group | Smart Letter Gen", page_icon="🔴", layout="centered")
+st.set_page_config(page_title="SGV Group | Smart Letter Gen", layout="centered")
 
 # ===================== CUSTOM CSS =====================
 st.markdown("""
